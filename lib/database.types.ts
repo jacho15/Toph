@@ -34,6 +34,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_limits: {
+        Row: {
+          global_monthly_usd: number
+          id: boolean
+          ip_hourly_usd: number
+          updated_at: string
+        }
+        Insert: {
+          global_monthly_usd?: number
+          id?: boolean
+          ip_hourly_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          global_monthly_usd?: number
+          id?: boolean
+          ip_hourly_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_usage: {
+        Row: {
+          cache_creation_input_tokens: number
+          cache_read_input_tokens: number
+          cost_usd: number
+          created_at: string
+          feature: string
+          id: number
+          input_tokens: number
+          ip_hash: string
+          model: string
+          output_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          cache_creation_input_tokens?: number
+          cache_read_input_tokens?: number
+          cost_usd: number
+          created_at?: string
+          feature?: string
+          id?: never
+          input_tokens?: number
+          ip_hash: string
+          model: string
+          output_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          cache_creation_input_tokens?: number
+          cache_read_input_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          feature?: string
+          id?: never
+          input_tokens?: number
+          ip_hash?: string
+          model?: string
+          output_tokens?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      demo_state: {
+        Row: {
+          anchored_on: string
+          id: boolean
+        }
+        Insert: {
+          anchored_on: string
+          id?: boolean
+        }
+        Update: {
+          anchored_on?: string
+          id?: boolean
+        }
+        Relationships: []
+      }
       farms: {
         Row: {
           created_at: string
@@ -442,6 +520,21 @@ export type Database = {
       }
     }
     Functions: {
+      ai_budget_check: { Args: { p_ip_hash: string }; Returns: Json }
+      ai_usage_record: {
+        Args: {
+          p_cache_read: number
+          p_cache_write: number
+          p_cost: number
+          p_feature: string
+          p_input: number
+          p_ip_hash: string
+          p_model: string
+          p_output: number
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       current_farm_id: { Args: never; Returns: string }
       current_user_role: {
         Args: never
@@ -449,6 +542,7 @@ export type Database = {
       }
       dashboard_stats: { Args: never; Returns: Json }
       mark_logs_read: { Args: { p_log_ids: string[] }; Returns: undefined }
+      refresh_demo_data: { Args: never; Returns: undefined }
     }
     Enums: {
       activity_type:

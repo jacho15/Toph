@@ -1,6 +1,7 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Mic, Search } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -41,17 +42,26 @@ export default function DashboardHeader({
         <h1 className="text-lg font-semibold leading-[26px] text-ink">{title}</h1>
         <p className="text-base leading-[20.8px] text-text-secondary">{subtitle}</p>
       </div>
-      <label className="flex h-[34px] w-[370px] items-center gap-[10px] rounded-[30px] border border-border-default bg-paper px-4 py-2 shadow-[0_0_4px_rgba(0,0,0,0.05)]">
-        <Search className="h-4 w-4 shrink-0 text-text-placeholder" strokeWidth={1.33} />
-        <span className="sr-only">Search</span>
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => handleChange(event.target.value)}
-          placeholder="Search"
-          className="w-full bg-transparent text-sm text-ink placeholder:text-text-placeholder focus:outline-none"
-        />
-      </label>
+      <div className="flex items-center gap-2">
+        <label className="flex h-[34px] w-[370px] items-center gap-[10px] rounded-[30px] border border-border-default bg-paper px-4 py-2 shadow-[0_0_4px_rgba(0,0,0,0.05)]">
+          <Search className="h-4 w-4 shrink-0 text-text-placeholder" strokeWidth={1.33} />
+          <span className="sr-only">Search</span>
+          <input
+            type="text"
+            value={value}
+            onChange={(event) => handleChange(event.target.value)}
+            placeholder="Search"
+            className="w-full bg-transparent text-sm text-ink placeholder:text-text-placeholder focus:outline-none"
+          />
+        </label>
+        <Link
+          href="/record"
+          className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-[80px] bg-ink px-3 text-sm text-paper shadow-[0_0_4px_rgba(0,0,0,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper"
+        >
+          <Mic className="h-4 w-4 shrink-0" strokeWidth={1.33} />
+          <span>New Voice Log</span>
+        </Link>
+      </div>
     </div>
   );
 }

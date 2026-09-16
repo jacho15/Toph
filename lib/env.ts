@@ -13,3 +13,6 @@ export const SUPABASE_ANON_KEY = (): string =>
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   );
+
+export const SUPABASE_SERVICE_ROLE_KEY = (): string =>
+  required(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY");
