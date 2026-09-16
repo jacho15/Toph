@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- Palette ---- */
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-text-secondary: #4d4d4d;
+  --color-text-muted: #808080;
+  --color-text-faint: #b3b3b3;
+  --color-text-placeholder: #cccccc;
+
+  --color-border-subtle: #f2f2f2;
+  --color-border-default: #e6e6e6;
+  --color-border-map: #e9e9e9;
+
+  --color-row-highlight: #f8f8f8;
+
+  --color-badge-green-fill: #019c25;
+  --color-badge-green-border: #006939;
+
+  --color-waveform-played: #003930;
+  --color-waveform-unplayed: #01382f;
+
+  --color-tag-green: #146c44;
+
+  --color-map-blue: #0065f0;
+  --color-map-blue-light: #00d4f0;
+
+  --color-sidebar-border-start: #a6a6a6;
+  --color-sidebar-border-end: #595959;
+
+  /* ---- Font family ---- */
+  --font-sans: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---- Font sizes / line-heights (Figma text styles) ---- */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 13px;
+
+  --text-sm: 14px;
+  --text-sm--line-height: 18.2px;
+
+  --text-base: 16px;
+  --text-base--line-height: 20.8px;
+
+  --text-lg: 20px;
+  --text-lg--line-height: 26px;
+
+  --text-stat: 48px;
+  --text-stat--line-height: 62.4px;
+
+  /* ---- Radii ---- */
+  --radius-nav-button: 4px;
+  --radius-sidebar: 16px;
+  --radius-stat-card: 14px;
+  --radius-logs-card: 20px;
+  --radius-chip-pill: 80px;
+  --radius-search: 30px;
+  --radius-view-all-button: 4px;
+  --radius-row-action: 80px;
+  --radius-action-button: 7.04px;
+  --radius-map-card: 14px;
+  --radius-map-highlight: 14px;
+  --radius-badge-pill: 50px;
+
+  /* ---- Shadows ---- */
+  --shadow-chip: 0 0 4px rgba(0, 0, 0, 0.05);
+  --shadow-avatar-inner: inset 0 3px 4.5px rgba(0, 0, 0, 0.1);
+  --shadow-map-pin: 0 0 39.5px #0065f0;
+
+  /* ---- Layout constants ---- */
+  --spacing-sidebar-width: 280px;
+  --spacing-sidebar-margin: 10px;
+  --spacing-main-gap: 10px;
+  --spacing-main-padding-x: 30px;
+  --spacing-card-gap: 10px;
+  --spacing-row-height: 58px;
+  --spacing-nav-button-height: 38px;
+}
+
+body {
+  background: #fff;
+  color: #0a0a0a;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
