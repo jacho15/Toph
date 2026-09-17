@@ -122,18 +122,26 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
   // source data in sync when the field list changes. `handleLoad` checks for the source first,
   // so calling it twice is harmless.
   useEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    const source = map.getSource(FIELDS_SOURCE_ID);
-    if (source && "setData" in source) {
-      (source as { setData: (data: typeof boundaryCollection) => void }).setData(boundaryCollection);
-      return;
-    }
-    if (map.isStyleLoaded()) {
-      handleLoad({ target: map });
-    } else {
-      map.once("load", () => handleLoad({ target: map }));
-    }
+    if (boundaryCollection.features.length === 0) return;
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      const map = mapRef.current?.getMap();
+      if (!map?.isStyleLoaded()) {
+        if (++attempts > 100) {
+          window.clearInterval(timer);
+          console.warn("[FarmMap] map style never reported ready; field outlines not drawn");
+        }
+        return;
+      }
+      window.clearInterval(timer);
+      const source = map.getSource(FIELDS_SOURCE_ID);
+      if (source && "setData" in source) {
+        (source as { setData: (data: typeof boundaryCollection) => void }).setData(boundaryCollection);
+      } else {
+        handleLoad({ target: map });
+      }
+    }, 100);
+    return () => window.clearInterval(timer);
   }, [boundaryCollection, handleLoad]);
 
   function flyToField(field: FarmField) {

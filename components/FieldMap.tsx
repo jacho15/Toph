@@ -90,18 +90,26 @@ export default function FieldMap({
     [boundary]
   );
 
-  // Two entry points on purpose: "load" covers the normal case, and this effect covers a map
-  // instance that was already loaded before this component mounted (e.g. a remount while the
-  // style is cached). `installBoundary` is idempotent — it checks for the source first.
+  // Don't depend on a single map event firing at the right moment. The "load"/"styledata"
+  // events can already have fired before this component's handlers attach (inline style +
+  // cached raster tiles), which is what previously left the outline missing. Polling
+  // `isStyleLoaded()` works no matter when the style became ready. `installBoundary` checks
+  // for its source first, so running it twice is harmless.
   useEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    if (map.isStyleLoaded()) {
-      installBoundary(map);
-    } else {
-      map.once("load", () => installBoundary(map));
-    }
-  }, [installBoundary]);
+    if (!boundary) return;
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      const map = mapRef.current?.getMap();
+      if (map?.isStyleLoaded()) {
+        window.clearInterval(timer);
+        installBoundary(map);
+      } else if (++attempts > 100) {
+        window.clearInterval(timer);
+        console.warn("[FieldMap] map style never reported ready; field outline not drawn");
+      }
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [boundary, installBoundary]);
 
   if (!boundary && !location) {
     return (
