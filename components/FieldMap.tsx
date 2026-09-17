@@ -3,8 +3,9 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { LngLatBoundsLike, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 import { Map, Marker } from "react-map-gl/maplibre";
+import type { MapRef } from "react-map-gl/maplibre";
 import clsx from "clsx";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
@@ -59,9 +60,10 @@ export default function FieldMap({
   // and a raster-only style fires no further style events, so the source was never added.
   // Adding the source/layers imperatively in "load" (and fitting bounds there too) removes that
   // race entirely.
-  const handleLoad = useCallback(
-    (event: { target: MapLibreMap }) => {
-      const map = event.target;
+  const mapRef = useRef<MapRef>(null);
+
+  const installBoundary = useCallback(
+    (map: MapLibreMap) => {
       if (!boundary) return;
 
       if (!map.getSource(BOUNDARY_SOURCE_ID)) {
@@ -87,6 +89,19 @@ export default function FieldMap({
     },
     [boundary]
   );
+
+  // Two entry points on purpose: "load" covers the normal case, and this effect covers a map
+  // instance that was already loaded before this component mounted (e.g. a remount while the
+  // style is cached). `installBoundary` is idempotent — it checks for the source first.
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    if (map.isStyleLoaded()) {
+      installBoundary(map);
+    } else {
+      map.once("load", () => installBoundary(map));
+    }
+  }, [installBoundary]);
 
   if (!boundary && !location) {
     return (
@@ -125,7 +140,8 @@ export default function FieldMap({
         boxZoom={interactive}
         keyboard={interactive}
         style={{ width: "100%", height: "100%" }}
-        onLoad={handleLoad}
+        ref={mapRef}
+        onLoad={(event) => installBoundary(event.target)}
       >
         {location ? (
           <Marker longitude={location.coordinates[0]} latitude={location.coordinates[1]} anchor="center">

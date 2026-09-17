@@ -1,12 +1,12 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { LngLatBoundsLike, StyleSpecification } from "maplibre-gl";
-import { Layer, Map, Marker, Source } from "react-map-gl/maplibre";
+import type { LngLatBoundsLike, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import { Map, Marker } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
 import Link from "next/link";
 import clsx from "clsx";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { formatActivityLabel, formatLogDate } from "@/lib/format";
 import type { FarmField, RecentLogLocation } from "@/lib/data-pages";
@@ -50,13 +50,15 @@ function boundsFromBoundaries(boundaries: GeoJSON.Polygon[]): LngLatBoundsLike |
   ];
 }
 
-/** Bounding-box center. The seed fields are rectangles, so this is also their true centroid. */
+/** Bounding-box center, used to place the field name label over each polygon. */
 function centroidOfBoundary(boundary: GeoJSON.Polygon): [number, number] {
   const bounds = boundsFromBoundaries([boundary]) as [[number, number], [number, number]] | null;
   if (!bounds) return [0, 0];
   const [[minLng, minLat], [maxLng, maxLat]] = bounds;
   return [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
 }
+
+const FIELDS_SOURCE_ID = "fields";
 
 type Selection = { type: "field"; field: FarmField } | { type: "pin"; location: RecentLogLocation } | null;
 
@@ -82,6 +84,57 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
     () => boundsFromBoundaries(fieldsWithBoundary.map((f) => f.boundary as GeoJSON.Polygon)),
     [fieldsWithBoundary]
   );
+
+  // Same race as components/FieldMap.tsx: with an inline style object the style is already
+  // loaded before <Source>/<Layer> subscribe to "styledata", and a raster-only style emits no
+  // further style events, so the polygons were never added. Add them imperatively on "load",
+  // and keep the data in sync afterwards via setData.
+  const handleLoad = useCallback(
+    (event: { target: MapLibreMap }) => {
+      const map = event.target;
+      if (boundaryCollection.features.length === 0) return;
+
+      if (!map.getSource(FIELDS_SOURCE_ID)) {
+        map.addSource(FIELDS_SOURCE_ID, { type: "geojson", data: boundaryCollection });
+        map.addLayer({
+          id: "field-fill",
+          type: "fill",
+          source: FIELDS_SOURCE_ID,
+          paint: { "fill-color": "#0065f0", "fill-opacity": 0.15 },
+        });
+        map.addLayer({
+          id: "field-line",
+          type: "line",
+          source: FIELDS_SOURCE_ID,
+          paint: { "line-color": "#0065f0", "line-width": 1.5 },
+        });
+      }
+
+      if (initialBounds) {
+        map.fitBounds(initialBounds, { padding: 60, maxZoom: 16, duration: 0 });
+      }
+    },
+    [boundaryCollection, initialBounds]
+  );
+
+  // Two entry points on purpose: "load" covers the normal case; this effect installs the layers
+  // on a map instance that was already loaded before this component mounted, and keeps the
+  // source data in sync when the field list changes. `handleLoad` checks for the source first,
+  // so calling it twice is harmless.
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const source = map.getSource(FIELDS_SOURCE_ID);
+    if (source && "setData" in source) {
+      (source as { setData: (data: typeof boundaryCollection) => void }).setData(boundaryCollection);
+      return;
+    }
+    if (map.isStyleLoaded()) {
+      handleLoad({ target: map });
+    } else {
+      map.once("load", () => handleLoad({ target: map }));
+    }
+  }, [boundaryCollection, handleLoad]);
 
   function flyToField(field: FarmField) {
     setSelected({ type: "field", field });
@@ -135,6 +188,7 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
           }
           mapStyle={SATELLITE_STYLE}
           style={{ width: "100%", height: "100%" }}
+          onLoad={handleLoad}
           interactiveLayerIds={fieldsWithBoundary.length > 0 ? ["field-fill"] : undefined}
           onClick={(event) => {
             const feature = event.features?.[0];
@@ -143,13 +197,6 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
             if (field) setSelected({ type: "field", field });
           }}
         >
-          {fieldsWithBoundary.length > 0 ? (
-            <Source id="fields" type="geojson" data={boundaryCollection}>
-              <Layer id="field-fill" type="fill" paint={{ "fill-color": "#0065f0", "fill-opacity": 0.15 }} />
-              <Layer id="field-line" type="line" paint={{ "line-color": "#0065f0", "line-width": 1.5 }} />
-            </Source>
-          ) : null}
-
           {fieldsWithBoundary.map((field) => {
             const [lng, lat] = centroidOfBoundary(field.boundary as GeoJSON.Polygon);
             return (
