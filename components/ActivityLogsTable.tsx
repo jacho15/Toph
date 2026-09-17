@@ -38,9 +38,14 @@ type Filters = {
   dir: ActivityLogsSortDir;
 };
 
-/** Renders "45m", "4h", or "4h 40m"; there's no shared duration formatter in lib/format.ts. */
+/**
+ * Renders "13s", "45m", "4h", or "4h 40m"; there's no shared duration formatter in
+ * lib/format.ts. Voice clips are usually seconds long, so anything under a minute is
+ * shown in seconds rather than rounding to "0m".
+ */
 function formatDuration(seconds: number | null): string {
   if (seconds === null || seconds <= 0) return "—";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
   const totalMinutes = Math.round(seconds / 60);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
