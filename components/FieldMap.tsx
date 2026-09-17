@@ -1,6 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
+import "@/lib/maplibre-worker";
 import type { LngLatBoundsLike, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 import { Map, Marker } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
@@ -55,11 +56,10 @@ export default function FieldMap({
   interactive: boolean;
   className?: string;
 }) {
-  // The declarative <Source>/<Layer>components never rendered the outline here: with an inline
-  // style object the style finishes loading before those components subscribe to "styledata",
-  // and a raster-only style fires no further style events, so the source was never added.
-  // Adding the source/layers imperatively in "load" (and fitting bounds there too) removes that
-  // race entirely.
+  // The outline is added imperatively (source + two layers) and the view is fitted to the
+  // field in the same step, so both happen exactly once the style is usable. Note that the
+  // polygon depends on MapLibre's Web Worker (GeoJSON is processed there); see
+  // lib/maplibre-worker.ts for why that worker needs an explicit URL under Turbopack.
   const mapRef = useRef<MapRef>(null);
 
   const installBoundary = useCallback(
@@ -90,11 +90,10 @@ export default function FieldMap({
     [boundary]
   );
 
-  // Don't depend on a single map event firing at the right moment. The "load"/"styledata"
-  // events can already have fired before this component's handlers attach (inline style +
-  // cached raster tiles), which is what previously left the outline missing. Polling
-  // `isStyleLoaded()` works no matter when the style became ready. `installBoundary` checks
-  // for its source first, so running it twice is harmless.
+  // Belt and braces alongside onLoad: poll `isStyleLoaded()` so the outline is installed even
+  // if the style became ready before this component's handlers attached. `installBoundary`
+  // checks for its source first, so running it twice is harmless. The console warning is the
+  // only signal if the map never becomes ready (it is what exposed the missing worker).
   useEffect(() => {
     if (!boundary) return;
     let attempts = 0;

@@ -449,6 +449,25 @@ Required environment variables, set in the Vercel project:
 <ref>.supabase.co`) — not a URL with a path like `/rest/v1` appended, which
 breaks both the `@supabase/ssr` browser client and the admin client.
 
+### MapLibre's Web Worker
+
+MapLibre processes GeoJSON (the field polygons) in a Web Worker and, by
+default, locates that worker with `new URL('./maplibre-gl-worker.mjs',
+import.meta.url)`. Turbopack does not preserve `import.meta.url` for bundled
+modules, so the browser requested the page itself as a module script, got
+HTML back, and refused it — raster tiles still rendered (they load on the main
+thread) but no polygon ever did. The fix has three parts:
+
+- `scripts/copy-maplibre-worker.mjs` copies the worker and its shared chunk
+  from `node_modules/maplibre-gl/dist` into `public/maplibre/` on
+  `postinstall` and `prebuild`, so the files always match the installed
+  version. The directory is gitignored.
+- `lib/maplibre-worker.ts` calls `setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')`
+  and is imported by every component that creates a map.
+- `proxy.ts` excludes `/maplibre/` (and `.mjs`/`.js` files) from the auth
+  redirect, because a worker script redirected to `/login` fails with the
+  same MIME error.
+
 ## Design fidelity
 
 The Figma file was pulled through the Figma REST API using small one-off

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # figma api cache (large raw json)
 design/raw/
+
+# maplibre worker files copied from node_modules by scripts/copy-maplibre-worker.mjs
+public/maplibre/

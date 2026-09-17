@@ -1,6 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
+import "@/lib/maplibre-worker";
 import type { LngLatBoundsLike, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 import { Map, Marker } from "react-map-gl/maplibre";
 import type { MapRef } from "react-map-gl/maplibre";
@@ -11,8 +12,8 @@ import { X } from "lucide-react";
 import { formatActivityLabel, formatLogDate } from "@/lib/format";
 import type { FarmField, RecentLogLocation } from "@/lib/data-pages";
 
-// Duplicated from components/FieldMap.tsx (a small constant) rather than imported, since FieldMap
-// is owned by a concurrent change and must not be touched.
+// Same satellite style as components/FieldMap.tsx; duplicated rather than shared because it is a
+// six-line constant and the two components are otherwise independent.
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
   sources: {
@@ -85,10 +86,9 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
     [fieldsWithBoundary]
   );
 
-  // Same race as components/FieldMap.tsx: with an inline style object the style is already
-  // loaded before <Source>/<Layer> subscribe to "styledata", and a raster-only style emits no
-  // further style events, so the polygons were never added. Add them imperatively on "load",
-  // and keep the data in sync afterwards via setData.
+  // Field polygons are added imperatively (one GeoJSON source, fill + line layers) and the
+  // view is fitted to all fields in the same step. GeoJSON is processed in MapLibre's Web
+  // Worker; see lib/maplibre-worker.ts for why that worker needs an explicit URL here.
   const handleLoad = useCallback(
     (event: { target: MapLibreMap }) => {
       const map = event.target;
@@ -117,10 +117,10 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
     [boundaryCollection, initialBounds]
   );
 
-  // Two entry points on purpose: "load" covers the normal case; this effect installs the layers
-  // on a map instance that was already loaded before this component mounted, and keeps the
-  // source data in sync when the field list changes. `handleLoad` checks for the source first,
-  // so calling it twice is harmless.
+  // Belt and braces alongside onLoad: poll `isStyleLoaded()` so the layers are installed even
+  // if the style became ready before this component's handlers attached, and push new data
+  // into the existing source when the field list changes. `handleLoad` checks for the source
+  // first, so calling it twice is harmless.
   useEffect(() => {
     if (boundaryCollection.features.length === 0) return;
     let attempts = 0;
