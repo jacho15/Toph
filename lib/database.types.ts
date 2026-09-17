@@ -97,6 +97,45 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          full_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          full_name: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          full_name?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_members_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_state: {
         Row: {
           anchored_on: string
@@ -312,6 +351,8 @@ export type Database = {
       logs: {
         Row: {
           activity: Database["public"]["Enums"]["activity_type"]
+          attributed_crew_member_id: string | null
+          attributed_profile_id: string | null
           audio_mime: string | null
           audio_path: string | null
           created_at: string
@@ -324,13 +365,17 @@ export type Database = {
           id: string
           location: unknown
           source: string
+          spoken_name: string | null
           started_at: string
           summary: string | null
           transcript: string | null
+          uploaded_by: string | null
           waveform_peaks: Json | null
         }
         Insert: {
           activity: Database["public"]["Enums"]["activity_type"]
+          attributed_crew_member_id?: string | null
+          attributed_profile_id?: string | null
           audio_mime?: string | null
           audio_path?: string | null
           created_at?: string
@@ -343,13 +388,17 @@ export type Database = {
           id?: string
           location?: unknown
           source?: string
+          spoken_name?: string | null
           started_at: string
           summary?: string | null
           transcript?: string | null
+          uploaded_by?: string | null
           waveform_peaks?: Json | null
         }
         Update: {
           activity?: Database["public"]["Enums"]["activity_type"]
+          attributed_crew_member_id?: string | null
+          attributed_profile_id?: string | null
           audio_mime?: string | null
           audio_path?: string | null
           created_at?: string
@@ -362,12 +411,28 @@ export type Database = {
           id?: string
           location?: unknown
           source?: string
+          spoken_name?: string | null
           started_at?: string
           summary?: string | null
           transcript?: string | null
+          uploaded_by?: string | null
           waveform_peaks?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "logs_attributed_crew_member_id_fkey"
+            columns: ["attributed_crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "crew_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_attributed_profile_id_fkey"
+            columns: ["attributed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "logs_employee_id_fkey"
             columns: ["employee_id"]
@@ -387,6 +452,20 @@ export type Database = {
             columns: ["field_id"]
             isOneToOne: false
             referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields_geo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -466,14 +545,56 @@ export type Database = {
       }
     }
     Views: {
+      fields_geo: {
+        Row: {
+          acres: number | null
+          boundary_geojson: Json | null
+          centroid_geojson: Json | null
+          crop: string | null
+          farm_id: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          acres?: number | null
+          boundary_geojson?: never
+          centroid_geojson?: never
+          crop?: string | null
+          farm_id?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          acres?: number | null
+          boundary_geojson?: never
+          centroid_geojson?: never
+          crop?: string | null
+          farm_id?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fields_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       log_feed: {
         Row: {
           activity: Database["public"]["Enums"]["activity_type"] | null
           answers: Json | null
+          attributed_crew_member_id: string | null
+          attributed_name: string | null
+          attributed_profile_id: string | null
           audio_mime: string | null
           audio_path: string | null
           created_at: string | null
           details: Json | null
+          display_name: string | null
           duration_s: number | null
           employee_avatar_url: string | null
           employee_id: string | null
@@ -488,13 +609,30 @@ export type Database = {
           is_new: boolean | null
           location_geojson: Json | null
           source: string | null
+          spoken_name: string | null
           started_at: string | null
           summary: string | null
           tags: Json | null
           transcript: string | null
+          uploaded_by: string | null
+          uploaded_by_name: string | null
           waveform_peaks: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "logs_attributed_crew_member_id_fkey"
+            columns: ["attributed_crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "crew_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_attributed_profile_id_fkey"
+            columns: ["attributed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "logs_employee_id_fkey"
             columns: ["employee_id"]
@@ -514,6 +652,20 @@ export type Database = {
             columns: ["field_id"]
             isOneToOne: false
             referencedRelation: "fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "fields_geo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -542,6 +694,16 @@ export type Database = {
       }
       dashboard_stats: { Args: never; Returns: Json }
       mark_logs_read: { Args: { p_log_ids: string[] }; Returns: undefined }
+      match_person_by_name: {
+        Args: { p_name: string }
+        Returns: {
+          full_name: string
+          id: string
+          is_self: boolean
+          kind: string
+          score: number
+        }[]
+      }
       refresh_demo_data: { Args: never; Returns: undefined }
     }
     Enums: {

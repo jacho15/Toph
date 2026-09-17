@@ -144,5 +144,12 @@ export const MOCK_LOG_ROWS: LogFeedRow[] = ROW_SEEDS.map((seed, index) => {
     answers: [],
     is_new: isFirst,
     created_at: chicagoIso(seed.date, seed.end),
+    spoken_name: null,
+    attributed_profile_id: null,
+    attributed_crew_member_id: null,
+    attributed_name: null,
+    display_name: seed.employee_name,
+    uploaded_by: `employee-${index + 1}`,
+    uploaded_by_name: seed.employee_name,
   };
 });

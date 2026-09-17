@@ -1,6 +1,6 @@
 import "server-only";
 
-export { extractVoiceLog, ACTIVITY_TYPES } from "./extract-core";
+export { extractVoiceLog, ACTIVITY_TYPES, buildSchema } from "./extract-core";
 export type {
   FieldInfo,
   VoiceLogExtraction,

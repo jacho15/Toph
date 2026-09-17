@@ -9,6 +9,9 @@ export type LogFeedRow = {
   transcript: string | null; summary: string | null; details: Record<string, unknown>;
   field_boundary: GeoJSON.Polygon | null; location_geojson: GeoJSON.Point | null;
   tags: Tag[]; answers: LogAnswer[]; is_new: boolean; created_at: string;
+  spoken_name: string | null; attributed_profile_id: string | null; attributed_crew_member_id: string | null;
+  attributed_name: string | null; display_name: string;
+  uploaded_by: string | null; uploaded_by_name: string | null;
 };
 export type DashboardStats = { todays_recordings: number; todays_new: number; active_workers: number; response_accuracy: number | null; new_logs_total: number };
 export type Viewer = { id: string; full_name: string; role: 'admin'|'manager'|'worker'; avatar_url: string | null; email?: string };

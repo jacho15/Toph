@@ -29,6 +29,7 @@ export function filterLogs(rows: LogFeedRow[], options: FilterLogsOptions): LogF
     result = result.filter((row) => {
       const haystack = [
         row.employee_name,
+        row.attributed_name ?? "",
         formatActivityLabel(row.activity),
         row.field_name ?? "",
         row.crop ?? "",

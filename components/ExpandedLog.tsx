@@ -269,6 +269,12 @@ export default function ExpandedLog({
         <div className="flex flex-col gap-1">
           <span className="text-base leading-[20.8px] text-ink">Summary</span>
           <p className="text-base leading-[20.8px] text-ink/30">{log.summary}</p>
+          {log.spoken_name ? (
+            <p className="text-sm text-text-secondary">Spoken name: &quot;{log.spoken_name}&quot;</p>
+          ) : null}
+          {log.uploaded_by && log.uploaded_by !== log.employee_id && log.uploaded_by_name ? (
+            <p className="text-sm text-text-secondary">Filed by {log.uploaded_by_name}</p>
+          ) : null}
         </div>
       </div>
 

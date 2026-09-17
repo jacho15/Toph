@@ -1,10 +1,10 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { LngLatBoundsLike, StyleSpecification } from "maplibre-gl";
-import { Layer, Map, Marker, Source } from "react-map-gl/maplibre";
+import type { LngLatBoundsLike, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import { Map, Marker } from "react-map-gl/maplibre";
 import clsx from "clsx";
-import { useState } from "react";
+import { useCallback } from "react";
 
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
@@ -22,6 +22,8 @@ const SATELLITE_STYLE: StyleSpecification = {
   },
   layers: [{ id: "esri-satellite", type: "raster", source: "esri" }],
 };
+
+const BOUNDARY_SOURCE_ID = "field-boundary";
 
 function boundsFromBoundary(boundary: GeoJSON.Polygon): LngLatBoundsLike {
   const ring = boundary.coordinates[0];
@@ -52,9 +54,39 @@ export default function FieldMap({
   interactive: boolean;
   className?: string;
 }) {
-  // An inline style loads before <Source> subscribes to "styledata", so the source is never
-  // added. Rendering the overlay only after onLoad guarantees the style is ready.
-  const [styleLoaded, setStyleLoaded] = useState(false);
+  // The declarative <Source>/<Layer>components never rendered the outline here: with an inline
+  // style object the style finishes loading before those components subscribe to "styledata",
+  // and a raster-only style fires no further style events, so the source was never added.
+  // Adding the source/layers imperatively in "load" (and fitting bounds there too) removes that
+  // race entirely.
+  const handleLoad = useCallback(
+    (event: { target: MapLibreMap }) => {
+      const map = event.target;
+      if (!boundary) return;
+
+      if (!map.getSource(BOUNDARY_SOURCE_ID)) {
+        map.addSource(BOUNDARY_SOURCE_ID, {
+          type: "geojson",
+          data: { type: "Feature", geometry: boundary, properties: {} },
+        });
+        map.addLayer({
+          id: "field-boundary-fill",
+          type: "fill",
+          source: BOUNDARY_SOURCE_ID,
+          paint: { "fill-color": "#0065f0", "fill-opacity": 0.2 },
+        });
+        map.addLayer({
+          id: "field-boundary-line",
+          type: "line",
+          source: BOUNDARY_SOURCE_ID,
+          paint: { "line-color": "#0065f0", "line-width": 1.5 },
+        });
+      }
+
+      map.fitBounds(boundsFromBoundary(boundary), { padding: 24, maxZoom: 16, duration: 0 });
+    },
+    [boundary]
+  );
 
   if (!boundary && !location) {
     return (
@@ -93,26 +125,8 @@ export default function FieldMap({
         boxZoom={interactive}
         keyboard={interactive}
         style={{ width: "100%", height: "100%" }}
-        onLoad={() => setStyleLoaded(true)}
+        onLoad={handleLoad}
       >
-        {boundary && styleLoaded ? (
-          <Source
-            id="field-boundary"
-            type="geojson"
-            data={{ type: "Feature", geometry: boundary, properties: {} }}
-          >
-            <Layer
-              id="field-boundary-fill"
-              type="fill"
-              paint={{ "fill-color": "#0065f0", "fill-opacity": 0.2 }}
-            />
-            <Layer
-              id="field-boundary-line"
-              type="line"
-              paint={{ "line-color": "#0065f0", "line-width": 1 }}
-            />
-          </Source>
-        ) : null}
         {location ? (
           <Marker longitude={location.coordinates[0]} latitude={location.coordinates[1]} anchor="center">
             <span

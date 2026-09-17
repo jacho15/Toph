@@ -405,7 +405,12 @@ export default function LogsTable({
                     {row.is_new && !locallyRead.has(row.id) ? (
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-badge-green-fill" aria-hidden />
                     ) : null}
-                    {row.employee_name}
+                    <span className="flex min-w-0 flex-col leading-tight">
+                      <span className="truncate">{row.display_name}</span>
+                      {row.uploaded_by && row.uploaded_by !== row.employee_id && row.uploaded_by_name ? (
+                        <span className="truncate text-2xs text-[#808080]">uploaded by {row.uploaded_by_name}</span>
+                      ) : null}
+                    </span>
                   </div>
                   <div className="px-[10px] text-sm text-text-secondary">{formatActivityLabel(row.activity)}</div>
                   <div className="px-[10px] text-sm text-text-secondary">{formatLogDate(row.started_at)}</div>

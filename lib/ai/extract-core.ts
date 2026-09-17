@@ -61,8 +61,13 @@ export type ExtractVoiceLogResult =
   | { ok: true; result: VoiceLogExtraction; usage: VoiceLogExtractionUsage }
   | { ok: false; error: string; usage?: VoiceLogExtractionUsage };
 
-/** Builds the extraction output schema, constraining `field_name` to the farm's actual field names. */
-function buildSchema(fields: FieldInfo[]) {
+/**
+ * Builds the extraction output schema, constraining `field_name` to the farm's actual field
+ * names. Exported so `createVoiceLog` can re-validate a client-submitted extraction (from
+ * `prepareVoiceLog`) against this same shape — including the farm-specific field_name enum —
+ * without paying for a second Claude call.
+ */
+export function buildSchema(fields: FieldInfo[]) {
   const fieldNames = fields.map((f) => f.name);
   const fieldNameSchema =
     fieldNames.length > 0 ? z.enum(fieldNames as [string, ...string[]]).nullable() : z.null();

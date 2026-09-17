@@ -29,6 +29,13 @@ function mapLogFeedRow(row: {
   answers: unknown;
   is_new: boolean | null;
   created_at: string | null;
+  spoken_name: string | null;
+  attributed_profile_id: string | null;
+  attributed_crew_member_id: string | null;
+  attributed_name: string | null;
+  display_name: string | null;
+  uploaded_by: string | null;
+  uploaded_by_name: string | null;
 }): LogFeedRow {
   return {
     id: row.id ?? "",
@@ -55,6 +62,13 @@ function mapLogFeedRow(row: {
     answers: (row.answers as LogAnswer[] | null) ?? [],
     is_new: row.is_new ?? false,
     created_at: row.created_at ?? row.started_at ?? new Date(0).toISOString(),
+    spoken_name: row.spoken_name,
+    attributed_profile_id: row.attributed_profile_id,
+    attributed_crew_member_id: row.attributed_crew_member_id,
+    attributed_name: row.attributed_name,
+    display_name: row.display_name ?? row.employee_name ?? "Unknown",
+    uploaded_by: row.uploaded_by,
+    uploaded_by_name: row.uploaded_by_name,
   };
 }
 
