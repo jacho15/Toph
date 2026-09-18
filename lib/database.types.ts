@@ -258,6 +258,55 @@ export type Database = {
           },
         ]
       }
+      log_edits: {
+        Row: {
+          changes: Json
+          created_at: string
+          edited_by: string
+          id: number
+          log_id: string
+          note: string | null
+        }
+        Insert: {
+          changes: Json
+          created_at?: string
+          edited_by: string
+          id?: never
+          log_id: string
+          note?: string | null
+        }
+        Update: {
+          changes?: Json
+          created_at?: string
+          edited_by?: string
+          id?: never
+          log_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "log_edits_edited_by_fkey"
+            columns: ["edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_edits_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "log_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_edits_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       log_reads: {
         Row: {
           log_id: string
@@ -355,6 +404,8 @@ export type Database = {
           attributed_profile_id: string | null
           audio_mime: string | null
           audio_path: string | null
+          corrected_at: string | null
+          corrected_by: string | null
           created_at: string
           details: Json
           duration_s: number | null
@@ -378,6 +429,8 @@ export type Database = {
           attributed_profile_id?: string | null
           audio_mime?: string | null
           audio_path?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
           created_at?: string
           details?: Json
           duration_s?: number | null
@@ -401,6 +454,8 @@ export type Database = {
           attributed_profile_id?: string | null
           audio_mime?: string | null
           audio_path?: string | null
+          corrected_at?: string | null
+          corrected_by?: string | null
           created_at?: string
           details?: Json
           duration_s?: number | null
@@ -429,6 +484,13 @@ export type Database = {
           {
             foreignKeyName: "logs_attributed_profile_id_fkey"
             columns: ["attributed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_corrected_by_fkey"
+            columns: ["corrected_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -592,6 +654,9 @@ export type Database = {
           attributed_profile_id: string | null
           audio_mime: string | null
           audio_path: string | null
+          corrected_at: string | null
+          corrected_by: string | null
+          corrected_by_name: string | null
           created_at: string | null
           details: Json | null
           display_name: string | null
@@ -629,6 +694,13 @@ export type Database = {
           {
             foreignKeyName: "logs_attributed_profile_id_fkey"
             columns: ["attributed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_corrected_by_fkey"
+            columns: ["corrected_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

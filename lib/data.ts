@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { DashboardStats, LogAnswer, LogFeedRow, Tag, Viewer } from "@/lib/types";
+import type { DashboardStats, Field, LogAnswer, LogFeedRow, Tag, Viewer } from "@/lib/types";
 
 /** Maps a `log_feed` view row (all columns nullable per the generated types) to the app's `LogFeedRow` contract. */
 function mapLogFeedRow(row: {
@@ -36,6 +36,8 @@ function mapLogFeedRow(row: {
   display_name: string | null;
   uploaded_by: string | null;
   uploaded_by_name: string | null;
+  corrected_at: string | null;
+  corrected_by_name: string | null;
 }): LogFeedRow {
   return {
     id: row.id ?? "",
@@ -69,6 +71,8 @@ function mapLogFeedRow(row: {
     display_name: row.display_name ?? row.employee_name ?? "Unknown",
     uploaded_by: row.uploaded_by,
     uploaded_by_name: row.uploaded_by_name,
+    corrected_at: row.corrected_at,
+    corrected_by_name: row.corrected_by_name,
   };
 }
 
@@ -127,4 +131,12 @@ export const getTags = cache(async (): Promise<Tag[]> => {
   const { data, error } = await supabase.from("tags").select("id, name, color").order("name");
   if (error || !data) return [];
   return data.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color ?? "#808080" }));
+});
+
+/** The caller's farm's fields, for the "Field" select in the log correction form. */
+export const getFields = cache(async (): Promise<Field[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("fields").select("id, name").order("name");
+  if (error || !data) return [];
+  return data;
 });

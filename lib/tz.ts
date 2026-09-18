@@ -19,6 +19,45 @@ export function localTimeToIso(hhmm: string, referenceIso: string, timeZone: str
   return new Date(naiveUtcMs - offsetMs).toISOString();
 }
 
+/**
+ * Local "YYYY-MM-DDTHH:MM" (the value a `datetime-local` input expects) for `iso`, as read on
+ * a wall clock in `timeZone`. Inverse of `localInputToIso`.
+ */
+export function isoToLocalInput(iso: string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(iso));
+
+  const map: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== "literal") map[part.type] = part.value;
+  }
+  // Some ICU implementations report midnight as hour "24" under hourCycle "h23".
+  const hour = map.hour === "24" ? "00" : map.hour;
+
+  return `${map.year}-${map.month}-${map.day}T${hour}:${map.minute}`;
+}
+
+/**
+ * Inverse of `isoToLocalInput`: a `datetime-local` value ("YYYY-MM-DDTHH:MM"), interpreted as a
+ * wall-clock time in `timeZone`, converted to a UTC ISO 8601 instant.
+ */
+export function localInputToIso(value: string, timeZone: string): string {
+  const [datePart, timePart] = value.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi] = timePart.split(":").map(Number);
+
+  const naiveUtcMs = Date.UTC(y, mo - 1, d, h, mi, 0);
+  const offsetMs = timeZoneOffsetMs(new Date(naiveUtcMs), timeZone);
+  return new Date(naiveUtcMs - offsetMs).toISOString();
+}
+
 /** How far "ahead" `timeZone`'s wall clock reads versus true UTC, at `date`, in ms. */
 function timeZoneOffsetMs(date: Date, timeZone: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {

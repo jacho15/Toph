@@ -2,7 +2,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import LogsTable from "@/components/LogsTable";
 import RealtimeRefresher from "@/components/RealtimeRefresher";
 import StatCards from "@/components/StatCards";
-import { getDashboardStats, getLogFeed, getTags, getViewer } from "@/lib/data";
+import { getDashboardStats, getFields, getLogFeed, getTags, getViewer } from "@/lib/data";
 
 export default async function DashboardPage({
   searchParams,
@@ -14,11 +14,12 @@ export default async function DashboardPage({
   // correctly opted into dynamic rendering.
   await searchParams;
 
-  const [viewer, stats, rows, tags] = await Promise.all([
+  const [viewer, stats, rows, tags, fields] = await Promise.all([
     getViewer(),
     getDashboardStats(),
     getLogFeed(),
     getTags(),
+    getFields(),
   ]);
 
   return (
@@ -26,7 +27,7 @@ export default async function DashboardPage({
       <RealtimeRefresher />
       <DashboardHeader title="Dashboard" subtitle="An overview of your farm and employee activity" />
       <StatCards stats={stats} />
-      <LogsTable rows={rows} tags={tags} referenceDate={new Date()} viewerRole={viewer.role} />
+      <LogsTable rows={rows} tags={tags} fields={fields} referenceDate={new Date()} viewerRole={viewer.role} />
     </>
   );
 }

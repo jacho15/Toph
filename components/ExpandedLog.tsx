@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Waveform from "./Waveform";
 import { addTag, createTag, getAudioUrl, removeTag, saveWaveformPeaks } from "@/app/actions/logs";
 import type { LogFeedRow, Tag, Viewer } from "@/lib/types";
+import { GuidedAnswers, RecordedDetails, TranscriptDisclosure } from "./LogDetails";
 
 const FieldMap = dynamic(() => import("./FieldMap"), {
   ssr: false,
@@ -269,6 +270,7 @@ export default function ExpandedLog({
         <div className="flex flex-col gap-1">
           <span className="text-base leading-[20.8px] text-ink">Summary</span>
           <p className="text-base leading-[20.8px] text-ink/30">{log.summary}</p>
+          <TranscriptDisclosure transcript={log.transcript} summary={log.summary} />
           {log.spoken_name ? (
             <p className="text-sm text-text-secondary">Spoken name: &quot;{log.spoken_name}&quot;</p>
           ) : null}
@@ -276,6 +278,9 @@ export default function ExpandedLog({
             <p className="text-sm text-text-secondary">Filed by {log.uploaded_by_name}</p>
           ) : null}
         </div>
+
+        <RecordedDetails details={log.details} />
+        <GuidedAnswers answers={log.answers} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-5">

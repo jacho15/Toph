@@ -4,11 +4,12 @@ import { AudioLines, Check, Funnel, ListFilter, Square, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
+import EditLogForm from "./EditLogForm";
 import ExpandedLog from "./ExpandedLog";
 import { markLogsRead } from "@/app/actions/logs";
 import { filterLogs, type LogsSortDir, type LogsSortField } from "@/lib/filter-logs";
 import { formatActivityLabel, formatLogDate, formatTimeRange } from "@/lib/format";
-import type { ActivityType, LogFeedRow, Tag, Viewer } from "@/lib/types";
+import type { ActivityType, Field, LogFeedRow, Tag, Viewer } from "@/lib/types";
 
 const SORT_FIELDS: { value: LogsSortField; label: string }[] = [
   { value: "employee", label: "Employee" },
@@ -33,11 +34,13 @@ function parseTableState(searchParams: URLSearchParams) {
 export default function LogsTable({
   rows,
   tags,
+  fields,
   referenceDate,
   viewerRole,
 }: {
   rows: LogFeedRow[];
   tags: Tag[];
+  fields: Field[];
   referenceDate: Date;
   viewerRole: Viewer["role"];
 }) {
@@ -45,9 +48,11 @@ export default function LogsTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const state = useMemo(() => parseTableState(searchParams), [searchParams]);
+  const canEdit = viewerRole === "admin" || viewerRole === "manager";
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [locallyRead, setLocallyRead] = useState<Set<string>>(new Set());
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [sortOpen, setSortOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const sortPopoverRef = useRef<HTMLDivElement>(null);
@@ -170,6 +175,7 @@ export default function LogsTable({
   function handleView(row: LogFeedRow) {
     const isOpen = state.open === row.id;
     setOpen(isOpen ? null : row.id);
+    if (isOpen) setEditingRowId(null);
     if (!isOpen && row.is_new && !locallyRead.has(row.id)) {
       void markAsRead([row.id]);
     }
@@ -413,7 +419,19 @@ export default function LogsTable({
                     </span>
                   </div>
                   <div className="px-[10px] text-sm text-text-secondary">{formatActivityLabel(row.activity)}</div>
-                  <div className="px-[10px] text-sm text-text-secondary">{formatLogDate(row.started_at)}</div>
+                  <div className="flex items-center gap-1.5 px-[10px] text-sm text-text-secondary">
+                    {formatLogDate(row.started_at)}
+                    {row.corrected_at ? (
+                      <span
+                        className="text-2xs text-text-faint"
+                        title={`Corrected by ${row.corrected_by_name ?? "an admin"} on ${formatLogDate(
+                          row.corrected_at
+                        )} at ${formatTimeRange(row.corrected_at, null)}`}
+                      >
+                        (corrected)
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="px-[10px] text-sm text-text-secondary">{row.field_name ?? "—"}</div>
                   <div className="px-[10px] text-sm text-text-secondary">
                     {formatTimeRange(row.started_at, row.ended_at)}
@@ -433,7 +451,32 @@ export default function LogsTable({
                 </div>
                 {isOpen ? (
                   <div className="border-b border-border-subtle bg-paper">
-                    <ExpandedLog log={row} availableTags={tags} viewerRole={viewerRole} />
+                    {canEdit ? (
+                      <div className="flex justify-end px-10 pt-6">
+                        <button
+                          type="button"
+                          onClick={() => setEditingRowId((id) => (id === row.id ? null : row.id))}
+                          className={clsx(
+                            "flex h-[34px] items-center justify-center rounded-[80px] border bg-paper px-4 text-sm shadow-[0_0_4px_rgba(0,0,0,0.05)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40",
+                            editingRowId === row.id
+                              ? "border-ink/20 text-ink"
+                              : "border-border-default text-text-secondary"
+                          )}
+                        >
+                          {editingRowId === row.id ? "Editing" : "Edit"}
+                        </button>
+                      </div>
+                    ) : null}
+                    {editingRowId === row.id ? (
+                      <EditLogForm
+                        log={row}
+                        fields={fields}
+                        onCancel={() => setEditingRowId(null)}
+                        onSaved={() => setEditingRowId(null)}
+                      />
+                    ) : (
+                      <ExpandedLog log={row} availableTags={tags} viewerRole={viewerRole} />
+                    )}
                   </div>
                 ) : null}
               </div>

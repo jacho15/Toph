@@ -12,6 +12,8 @@ export type LogFeedRow = {
   spoken_name: string | null; attributed_profile_id: string | null; attributed_crew_member_id: string | null;
   attributed_name: string | null; display_name: string;
   uploaded_by: string | null; uploaded_by_name: string | null;
+  corrected_at: string | null; corrected_by_name: string | null;
 };
+export type Field = { id: string; name: string };
 export type DashboardStats = { todays_recordings: number; todays_new: number; active_workers: number; response_accuracy: number | null; new_logs_total: number };
 export type Viewer = { id: string; full_name: string; role: 'admin'|'manager'|'worker'; avatar_url: string | null; email?: string };
