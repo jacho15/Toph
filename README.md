@@ -561,8 +561,7 @@ lib/
   data.ts, data-pages.ts  Server-side data access (dashboard vs. activity-logs/map)
   filter-logs.ts          Pure client-side filter/sort for the dashboard table
   format.ts, tz.ts         Farm-timezone-aware date/time formatting helpers
-  mock-feed.ts            Early static mock dataset, superseded by the Supabase
-                           data layer above — no longer referenced by the app
+  maplibre-worker.ts       Points MapLibre at its self-hosted Web Worker
 supabase/
   migrations/             11 SQL migrations, applied in order (see table above)
   seed.sql                Demo farm, users, fields, tags, and 29 logs

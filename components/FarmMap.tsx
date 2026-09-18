@@ -208,7 +208,9 @@ export default function FarmMap({ fields, locations }: { fields: FarmField[]; lo
           {fieldsWithBoundary.map((field) => {
             const [lng, lat] = centroidOfBoundary(field.boundary as GeoJSON.Polygon);
             return (
-              <Marker key={field.id} longitude={lng} latitude={lat} anchor="center">
+              // Anchored below the centroid so the label sits above the point and does not
+              // cover a log pin dropped near the middle of the field.
+              <Marker key={field.id} longitude={lng} latitude={lat} anchor="bottom" offset={[0, -12]}>
                 <span className="pointer-events-none whitespace-nowrap rounded bg-ink/70 px-1.5 py-0.5 text-2xs font-medium text-paper">
                   {field.name}
                 </span>
